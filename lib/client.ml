@@ -97,7 +97,7 @@ module Test = struct
     {
       length : int;
       num_pieces : int;
-      have : string IntMap.t;
+      have : bytes IntMap.t;
     }
 
   type loading =
@@ -135,7 +135,7 @@ module Test = struct
     | DigestComputed of int * SHA1.t
     | BlockRequested of SHA1.t * int * int * int
     | MetadataLengthReceived of SHA1.t * int
-    | MetadataBlockReceived of SHA1.t * int * string
+    | MetadataBlockReceived of SHA1.t * int * bytes
     | MetadataBlockRequested of SHA1.t * int
     | PeerChoked of SHA1.t
     | PeerInterested of SHA1.t
@@ -291,10 +291,10 @@ module Test = struct
         if IntMap.cardinal get.have = get.num_pieces then
           let raw = Bytes.create get.length in
           IntMap.iter (fun i d ->
-            Bytes.blit d 0 raw (i * metadata_block_size) (String.length d)
+            Bytes.blit d 0 raw (i * metadata_block_size) (Bytes.length d)
           ) have;
-          if SHA1.digest (Cstruct.of_string raw) = st.info_hash then
-            let info = Metadata.create (Bcode.decode (Cstruct.of_string raw)) in
+          if SHA1.digest (Cstruct.of_bytes raw) = st.info_hash then
+            let info = Metadata.create (Bcode.decode (Cstruct.of_bytes raw)) in
             let load = {info; have = Bitv.empty} in
             {st with state = Loading load}, [OpenTorrent info; ComputeDigest 0] (* FIXME *)
           else
